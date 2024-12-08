@@ -1,43 +1,56 @@
-exports.addBook = (req, res) => {
-    const newBook = req.body; // Assuming book data is sent in request body
-    // Save to database or other logic here
-    res.status(201).json({ message: 'Book added successfully', book: newBook });
-  };
-  
-  // Add other controller functions
-  exports.addAuthor = (req, res) => {
-    const newAuthor = req.body; // Assuming author data is sent in request body
-    // Save author logic
-    res.status(201).json({ message: 'Author added successfully', author: newAuthor });
-  };
-  
-  exports.addUser = (req, res) => {
-    const newUser = req.body; // Assuming user data is sent in request body
-    // Save user logic
-    res.status(201).json({ message: 'User added successfully', user: newUser });
-  };
-  
-  exports.borrowBook = (req, res) => {
-    const { bookId, userId } = req.body; // Assuming bookId and userId are sent in request body
-    // Borrow book logic
-    res.status(200).json({ message: 'Book borrowed successfully', bookId, userId });
-  };
-  
-  exports.returnBook = (req, res) => {
-    const { bookId, userId } = req.body; // Assuming bookId and userId are sent in request body
-    // Return book logic
-    res.status(200).json({ message: 'Book returned successfully', bookId, userId });
-  };
-  
-  exports.listBooksByAuthor = (req, res) => {
-    const { authorId } = req.params;
-    // Fetch books by the author logic
-    res.status(200).json([{ id: 1, title: "Sample Book" }]); // Example response
-  };
-  
-  exports.listBorrowedBooks = (req, res) => {
-    const { userId } = req.params;
-    // Fetch borrowed books for a specific user
-    res.status(200).json([{ id: 1, title: "Sample Borrowed Book" }]); // Example response
-  };
-  
+const Book = require('../models/Book');
+const BorrowingTransaction = require('../models/BorrowingTransaction');
+const User = require('../models/User'); 
+
+const borrowBook = async (req, res) => {
+    const { bookId, userId } = req.body; 
+    try {
+        if (!bookId || !userId) {
+            return res.status(400).json({ message: 'Book ID and User ID are required' });
+        }
+
+        // Check if the book exists and is available
+        const book = await Book.findById(bookId);
+        if (!book) {
+            return res.status(404).json({ message: 'Book not found' });
+        }
+        if (book.copiesAvailable < 1) {
+            return res.status(400).json({ message: 'No copies of the book are currently available' });
+        }
+
+        // Check if the user already has an active borrowing for this book
+        const activeTransaction = await BorrowingTransaction.findOne({
+            book: bookId,
+            member: userId,
+            returnDate: null, // Active borrowing has no return date
+        });
+        if (activeTransaction) {
+            return res.status(400).json({ message: 'You have already borrowed this book' });
+        }
+
+        // Create a new borrowing transaction
+        const transaction = await BorrowingTransaction.create({
+            book: bookId,
+            member: userId,
+            dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Due in 7 days
+        });
+
+        // Update book's available copies
+        book.copiesAvailable -= 1;
+        await book.save();
+
+        // Optionally update user's borrowed books list (if needed for tracking)
+        await User.findByIdAndUpdate(userId, {
+            $push: { borrowedBooks: bookId },
+        });
+
+        res.status(201).json({
+            message: 'Book borrowed successfully',
+            transaction,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { borrowBook };

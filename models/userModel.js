@@ -1,9 +1,11 @@
-const mongoose = require('mongoose');
-const userSchema = newMongoose.Schema({
-    userName: {
-        type: String, required: true, unique: true
-    },
-    email: { type: String, required: true, unique: true },
-    borrowed_books: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' }]
+const bcrypt = require('bcrypt');
+
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) return next();
+    this.password = await bcrypt.hash(this.password, 10);
+    next();
 });
-module.exports = mongoose.model('User, userSchema');
+
+userSchema.methods.validatePassword = async function (password) {
+    return bcrypt.compare(password, this.password);
+};
