@@ -1,0 +1,219 @@
+Q: 1
+Problem Statement: Library Management System API
+Please Submit the Masai Repo Link
+
+Objective:
+
+Develop a comprehensive RESTful API for a Library Management System using Node.js, Express.js, MongoDB, and Mongoose. The system should handle books, authors, members, and borrowing transactions. Implement user authentication and role-based access control to differentiate between Admin and Member functionalities. Utilize Express routing, middleware, and Mongoose schemas with relationships. Incorporate basic MongoDB queries for data manipulation.
+
+Requirements:
+
+1. User Roles and Authentication:
+Authentication:
+Implement JWT (JSON Web Tokens) for authentication.
+Secure password storage using hashing (e.g., bcrypt).
+User Roles:
+Admin:
+Full access to all features.
+Member:
+Can view available books.
+Can borrow and return books.
+Can view their own borrowing history.
+Middleware:
+Create authentication middleware to protect routes.
+Implement role-based access control middleware.
+2. Data Models (Mongoose Schemas):
+Define schemas with appropriate fields, data types, validations, and relationships.
+
+User Schema:
+username (String, unique, required)
+password (String, required)
+role (String, enum: ['Admin', 'Member'], default: 'Member')
+name (String, required)
+email (String, required, unique)
+borrowedBooks (Array of Book references)
+Author Schema:
+name (String, required)
+biography (String)
+dateOfBirth (Date)
+nationality (String)
+books (Array of Book references)
+Book Schema:
+title (String, required)
+ISBN (String, unique, required)
+summary (String)
+publicationDate (Date)
+genres (Array of Strings)
+copiesAvailable (Number, default: 1)
+author (Author reference)
+borrowedBy (Array of User references)
+BorrowingTransaction Schema:
+book (Book reference, required)
+member (User reference, required)
+borrowDate (Date, default: Date.now)
+dueDate (Date, required)
+returnDate (Date)
+status (String, enum: ['Borrowed', 'Returned'], default: 'Borrowed')
+3. API Endpoints and Routes:
+Authentication Routes:
+POST /api/auth/register
+Register a new member.
+Request Body: { username, password, name, email }
+Response: User details without password.
+POST /api/auth/login
+Authenticate user and issue JWT.
+Request Body: { username, password }
+Response: { token }
+User Routes:
+GET /api/users
+Access: Admin only.
+Retrieve all users.
+Response: List of users.
+GET /api/users/:id
+Access: Admin and the user themselves.
+Retrieve user by ID.
+Response: User details.
+PUT /api/users/:id
+Access: Admin and the user themselves.
+Update user information.
+Request Body: { name, email, password }
+Response: Updated user details.
+DELETE /api/users/:id
+Access: Admin only.
+Delete a user.
+Response: Success message.
+Author Routes:
+POST /api/authors
+Access: Admin only.
+Create a new author.
+Request Body: { name, biography, dateOfBirth, nationality }
+Response: Created author details.
+GET /api/authors
+Retrieve all authors.
+Response: List of authors.
+GET /api/authors/:id
+Retrieve author by ID.
+Response: Author details including books authored.
+PUT /api/authors/:id
+Access: Admin only.
+Update author information.
+Request Body: { name, biography, dateOfBirth, nationality }
+Response: Updated author details.
+DELETE /api/authors/:id
+Access: Admin only.
+Delete an author.
+Response: Success message.
+Book Routes:
+POST /api/books
+Access: Admin only.
+Add a new book.
+Request Body: { title, ISBN, summary, publicationDate, genres, copiesAvailable, authorId }
+Response: Created book details.
+GET /api/books
+Retrieve all books.
+Query Parameters:
+author (author ID)
+genre
+title (search by title)
+page (pagination)
+limit (pagination)
+Response: List of books with pagination info.
+GET /api/books/:id
+Retrieve book by ID.
+Response: Book details including author info.
+PUT /api/books/:id
+Access: Admin only.
+Update book information.
+Request Body: { title, summary, publicationDate, genres, copiesAvailable }
+Response: Updated book details.
+DELETE /api/books/:id
+Access: Admin only.
+Delete a book.
+Response: Success message.
+Borrowing Routes:
+POST /api/borrowings
+Access: Member only.
+Borrow a book.
+Request Body: { bookId }
+Actions:
+Decrease copiesAvailable in Book.
+Create a new BorrowingTransaction.
+Add book to user's borrowedBooks.
+Response: BorrowingTransaction details.
+GET /api/borrowings
+Access: Admin only.
+Retrieve all borrowing transactions.
+Response: List of transactions.
+GET /api/borrowings/my
+Access: Member only.
+Retrieve borrowing history of the logged-in member.
+Response: List of transactions.
+PUT /api/borrowings/:id/return
+Access: Member and Admin.
+Return a borrowed book.
+Actions:
+Update returnDate and status in BorrowingTransaction.
+Increase copiesAvailable in Book.
+Remove book from user's borrowedBooks.
+Response: Updated transaction details.
+4. Middleware Implementations:
+Authentication Middleware:
+Verify JWT.
+Attach user info to the request object.
+Authorization Middleware:
+Check user role for access control.
+Restrict access based on roles.
+Error Handling Middleware:
+Capture errors and send formatted responses.
+Handle validation errors and server errors.
+5. Database Operations (MongoDB Queries):
+CRUD Operations:
+Use Mongoose methods for creating, reading, updating, and deleting documents.
+Query Filters:
+Implement search, filter, and pagination using query parameters.
+6. Relationships:
+One-to-Many:
+An author can have multiple books.
+Many-to-One:
+A book has one author.
+Many-to-Many (through BorrowingTransaction):
+Users can borrow multiple books.
+Books can be borrowed by multiple users.
+9. Documentation:
+API Documentation:
+Document all endpoints, request parameters, and responses.
+Include authentication details.
+Usage Instructions:
+Provide setup instructions.
+Include how to run the application and test endpoints.
+Example Routes and Their Functionality:
+
+Register a New Member:
+Route: POST /api/auth/register
+Functionality:
+Accepts user details.
+Creates a new user with role 'Member'.
+Hashes the password before storing.
+Admin Adds a New Book:
+Route: POST /api/books
+Access: Admin only.
+Functionality:
+Accepts book details including authorId.
+Validates author exists.
+Creates a new book and updates the author's books array.
+Member Borrows a Book:
+Route: POST /api/borrowings
+Access: Member only.
+Functionality:
+Checks if copies are available.
+Decreases copiesAvailable.
+Creates a borrowing transaction.
+Adds book to user's borrowedBooks.
+Member Returns a Book:
+Route: PUT /api/borrowings/:id/return
+Access: Member who borrowed the book or Admin.
+Functionality:
+Updates the transaction's returnDate and status.
+Increases copiesAvailable.
+Removes book from user's borrowedBooks.
+
