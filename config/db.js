@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
-
+require("dotenv").config();
 const connectDB = async () => {
   try {
-    const dbURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/librarydb'; // Local MongoDB URI or from .env file
+    const dbURI = process.env.MONGODB_URI; 
     await mongoose.connect(dbURI);
   } catch (error) {
     console.error('Database connection failed:', error.message);
